@@ -1,28 +1,72 @@
 # Pizza Hunt
-Social media recipe app where users can post their creative spins on pizza, add comments to recipes, and create threads within comments. To do this, you’ll add back-end functionality to an existing front end.
 
+![Express](https://img.shields.io/badge/Express-4-000?style=flat&logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?style=flat&logo=mongodb&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=flat&logo=javascript&logoColor=black)
+![Node.js](https://img.shields.io/badge/Node.js-Server-339933?style=flat&logo=nodedotjs&logoColor=white)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white)
 
-### Building
-Instead of using a MySQL database, you’ll use MongoDB, a document-based NoSQL database, and Mongoose, an Object-Document Mapper, to work with unstructured data.
+A social pizza recipe application where users can post creative pizza recipes, add comments, and create threaded discussions. Built with an MVC architecture using Express.js, MongoDB, and Mongoose.
 
-### Usage and purpose
-* Integrate the API code with the client’s existing codebase.
+---
 
-* Create a Pizza model using Mongoose.
+## About
 
-* Use Mongoose’s middleware to automate functionality.
+Pizza Hunt is a social recipe-sharing app focused on creative pizza builds. Users can create pizzas with custom toppings, leave comments on recipes, and reply within comment threads. The back end uses MongoDB as a document-based NoSQL database with Mongoose as the Object-Document Mapper.
 
-* Implement Mongoose’s pre-built methods for CRUD operations.
+## Features
 
-* Complete a working front end to create a new pizza.
+- **Create pizza recipes** — post custom pizzas with chosen toppings and sizes
+- **Threaded comments** — add comments to recipes and create nested reply threads
+- **MVC architecture** — clean separation of models, views, and controllers
+- **NoSQL data layer** — MongoDB with Mongoose ODM for flexible document storage
+- **RESTful API** — full CRUD operations for pizzas and comments
+- **IndexedDB offline support** — cache data locally when the connection drops
 
-### Website Link
-[LINK TO HEROKU](https://pizzabloglv.herokuapp.com/)
+## Tech Stack
 
-### Contact or questions
-[Coleyrockin Github](https://github.com/coleyrockin)
+| Category | Technologies |
+|----------|-------------|
+| **Backend** | Node.js, Express.js |
+| **Database** | MongoDB, Mongoose ODM |
+| **Frontend** | HTML5, CSS3, JavaScript |
+| **Architecture** | MVC (Model-View-Controller) |
+| **Offline** | IndexedDB for local caching |
 
-[Coleyrockin@aol.com](mailto:coleyrockin@aol.com)
+## Getting Started
 
-### Screenshot
-![img](./img/pizza-hunt-sc.png)
+```bash
+# Clone the repository
+git clone https://github.com/coleyrockin/pizza-hunt.git
+
+# Navigate to the project
+cd pizza-hunt
+
+# Install dependencies
+npm install
+
+# Start the server
+npm start
+```
+
+The app runs on `http://localhost:3001` by default.
+
+## Project Structure
+
+```
+pizza-hunt/
+├── controllers/       # Route handler logic
+├── models/            # Mongoose schemas (Pizza, Comment)
+├── public/            # Static front-end assets
+│   ├── js/            # Client-side JavaScript
+│   └── css/           # Stylesheets
+├── routes/            # Express route definitions
+├── utils/             # Helper utilities
+├── server.js          # Express server entry point
+└── package.json       # Dependencies and scripts
+```
+
+---
+
+*Built with Express.js, MongoDB, and Mongoose.*
