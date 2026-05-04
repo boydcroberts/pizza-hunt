@@ -6,6 +6,7 @@ const MAX_CREATED_BY_LENGTH = 80;
 const MAX_TOPPING_LENGTH = 40;
 const ALLOWED_SIZES = ['Personal', 'Small', 'Medium', 'Large', 'Extra Large'];
 const MAX_TOPPINGS = 50;
+const MAX_PIZZAS_PER_REQUEST = 100;
 
 const sanitizeText = (value, maxLength = 255) => {
   if (typeof value !== 'string') {
@@ -33,6 +34,10 @@ const sanitizeToppings = toppings => {
 const isValidMongoId = value => mongoose.Types.ObjectId.isValid(value);
 
 const sanitizePizzaPayload = body => {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return {};
+  }
+
   const pizzaName = sanitizeText(body?.pizzaName, MAX_PIZZA_NAME_LENGTH);
   const createdBy = sanitizeText(body?.createdBy, MAX_CREATED_BY_LENGTH);
   const size = ALLOWED_SIZES.includes(body?.size) ? body.size : 'Large';
@@ -45,6 +50,11 @@ const sanitizePizzaPayload = body => {
     toppings
   };
 };
+
+const hasOnlyAllowedPizzaKeys = body =>
+  !!body && typeof body === 'object' && !Array.isArray(body)
+    ? Object.keys(body).every(key => ['pizzaName', 'createdBy', 'size', 'toppings'].includes(key))
+    : false;
 
 const isCreatePayloadValid = ({ pizzaName, createdBy, toppings }) =>
   pizzaName && createdBy && Array.isArray(toppings) && toppings.length > 0;
@@ -59,6 +69,7 @@ const pizzaController = {
       })
       .select('-__v')
       .sort({ _id: -1 })
+      .limit(MAX_PIZZAS_PER_REQUEST)
       .then(dbPizzaData => res.json(dbPizzaData))
       .catch(err => {
         console.log(err);
@@ -92,6 +103,10 @@ const pizzaController = {
 
   // createPizza
   createPizza({ body }, res) {
+    if (!hasOnlyAllowedPizzaKeys(body)) {
+      return res.status(400).json({ message: 'Unexpected field in payload.' });
+    }
+
     const payload = sanitizePizzaPayload(body);
 
     if (!isCreatePayloadValid(payload)) {
@@ -110,6 +125,10 @@ const pizzaController = {
   updatePizza({ params, body }, res) {
     if (!isValidMongoId(params.id)) {
       return res.status(400).json({ message: 'Invalid pizza id.' });
+    }
+
+    if (!hasOnlyAllowedPizzaKeys(body)) {
+      return res.status(400).json({ message: 'Unexpected field in payload.' });
     }
 
     const payload = sanitizePizzaPayload(body);

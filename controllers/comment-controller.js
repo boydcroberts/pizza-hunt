@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const MAX_WRITTEN_BY_LENGTH = 80;
 const MAX_COMMENT_LENGTH = 1000;
 const MAX_REPLY_LENGTH = 500;
+const ALLOWED_COMMENT_FIELDS = ['writtenBy', 'commentBody'];
+const ALLOWED_REPLY_FIELDS = ['writtenBy', 'replyBody'];
 
 const sanitizeText = (value, maxLength = 255) => {
   if (typeof value !== 'string') {
@@ -29,6 +31,14 @@ const sanitizeReplyPayload = body => ({
   replyBody: sanitizeText(body?.replyBody, MAX_REPLY_LENGTH)
 });
 
+const hasOnlyAllowedKeys = (body, allowedKeys) => {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return false;
+  }
+
+  return Object.keys(body).every(key => allowedKeys.includes(key));
+};
+
 const isValidCommentPayload = ({ writtenBy, commentBody }) => {
   return !!writtenBy && !!commentBody;
 };
@@ -46,20 +56,33 @@ const commentController = {
 
     const payload = sanitizeCommentPayload(body);
 
+    if (!hasOnlyAllowedKeys(body, ALLOWED_COMMENT_FIELDS)) {
+      return res.status(400).json({ message: 'Unexpected field in payload.' });
+    }
+
     if (!isValidCommentPayload(payload)) {
       return res.status(400).json({ message: 'Comment requires writtenBy and commentBody.' });
     }
 
+    let newCommentId;
+
     Comment.create(payload)
-      .then(({ _id }) => {
+      .then(comment => {
+        newCommentId = comment._id;
         return Pizza.findOneAndUpdate(
           { _id: params.pizzaId },
-          { $push: { comments: _id } },
+          { $push: { comments: comment._id } },
           { new: true }
         );
       })
       .then(dbPizzaData => {
         if (!dbPizzaData) {
+          if (newCommentId) {
+            return Comment.deleteOne({ _id: newCommentId }).then(() => {
+              res.status(404).json({ message: 'No pizza found with this id!' });
+            });
+          }
+
           res.status(404).json({ message: 'No pizza found with this id!' });
           return;
         }
@@ -78,6 +101,9 @@ const commentController = {
     }
 
     const payload = sanitizeReplyPayload(body);
+    if (!hasOnlyAllowedKeys(body, ALLOWED_REPLY_FIELDS)) {
+      return res.status(400).json({ message: 'Unexpected field in payload.' });
+    }
 
     if (!isValidReplyPayload(payload)) {
       return res.status(400).json({ message: 'Reply requires writtenBy and replyBody.' });
@@ -137,7 +163,7 @@ const commentController = {
     }
 
     Comment.findOneAndUpdate(
-      { _id: params.commentId },
+      { _id: params.commentId, 'replies.replyId': params.replyId },
       { $pull: { replies: { replyId: params.replyId } } },
       { new: true }
     )

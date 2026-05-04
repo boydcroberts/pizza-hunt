@@ -6,8 +6,28 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const API_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const API_RATE_LIMIT_MAX_REQUESTS = 120;
+const API_RATE_LIMIT_BUCKET_LIMIT = 2000;
+const API_RATE_LIMIT_CLEANUP_CHANCE = 1 / 40;
+
+const isSecureRequest = req =>
+  req.secure || req.headers['x-forwarded-proto'] === 'https';
+
+const cleanupRateLimitBuckets = now => {
+  if (Math.random() > API_RATE_LIMIT_CLEANUP_CHANCE || apiRequestBuckets.size <= API_RATE_LIMIT_BUCKET_LIMIT) {
+    return;
+  }
+
+  for (const [ip, bucket] of apiRequestBuckets.entries()) {
+    if (now - bucket.start > API_RATE_LIMIT_WINDOW_MS * 2) {
+      apiRequestBuckets.delete(ip);
+    }
+  }
+};
 
 const buildSecurityHeaders = (req, res, next) => {
+  if (isSecureRequest(req)) {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
     "script-src 'self'",
@@ -50,6 +70,8 @@ const apiRateLimiter = (req, res, next) => {
   if (bucket.count > API_RATE_LIMIT_MAX_REQUESTS) {
     return res.status(429).json({ message: 'Too many requests. Please try again later.' });
   }
+
+  cleanupRateLimitBuckets(now);
 
   return next();
 };
