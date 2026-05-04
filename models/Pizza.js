@@ -6,12 +6,14 @@ const PizzaSchema = new Schema(
     pizzaName: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 120
     },
     createdBy: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 80
     },
     createdAt: {
       type: Date,
@@ -24,7 +26,14 @@ const PizzaSchema = new Schema(
       enum: ['Personal', 'Small', 'Medium', 'Large', 'Extra Large'],
       default: 'Large'
     },
-    toppings: [],
+    toppings: {
+      type: [{ type: String, trim: true, maxlength: 40 }],
+      required: true,
+      validate: {
+        validator: toppings => Array.isArray(toppings) && toppings.length > 0 && toppings.length <= 50,
+        message: 'A pizza must have at least one topping and no more than 50 toppings.'
+      }
+    },
     comments: [
       {
         type: Schema.Types.ObjectId,
@@ -45,7 +54,7 @@ const PizzaSchema = new Schema(
 // get total count of comments and replies on retrieval
 PizzaSchema.virtual('commentCount').get(function () {
   return this.comments.reduce(
-    (total, comment) => total + comment.replies.length + 1,
+    (total, comment) => total + ((comment && comment.replies) ? comment.replies.length : 0) + 1,
     0
   );
 });
